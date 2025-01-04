@@ -1,4 +1,8 @@
-import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
+import {
+  v2 as cloudinary,
+  UploadApiOptions,
+  UploadApiResponse
+} from "cloudinary";
 import { CloudinaryConfig } from "../config/cloudinary.config";
 import { ResourceType } from "../type";
 
@@ -10,14 +14,10 @@ export class CloudinaryService {
 
   async uploadFile(
     filePath: string,
-    folder: string,
-    resourceType: ResourceType
+    options: UploadApiOptions
   ): Promise<UploadApiResponse> {
     try {
-      const result = await cloudinary.uploader.upload(filePath, {
-        folder,
-        resource_type: resourceType
-      });
+      const result = await cloudinary.uploader.upload(filePath, options);
       return result;
     } catch (error) {
       console.error("Error uploading to Cloudinary:", error);
@@ -36,6 +36,21 @@ export class CloudinaryService {
       return result;
     } catch (error) {
       console.error("Error deleting file from Cloudinary:", error);
+      throw error;
+    }
+  }
+
+  async getFileUrl(
+    publicId: string,
+    resourceType: ResourceType
+  ): Promise<string> {
+    try {
+      const result = await cloudinary.api.resource(publicId, {
+        resource_type: resourceType
+      });
+      return result.secure_url;
+    } catch (error) {
+      console.error("Error retrieving file URL:", error);
       throw error;
     }
   }

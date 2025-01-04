@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import { CloudinaryService } from "../services/cloudinary.service";
 import fs from "fs/promises";
-import { DeleteReq, ResourceType, UploadReq } from "../type";
+import { DeleteReq, GetFileUrlReq, ResourceType, UploadReq } from "../type";
 import { InputValidator } from "../utils/validator";
+import { UploadApiOptions } from "cloudinary";
+import { getFileFormat } from "../utils";
 
 export class CloudinaryController {
   private cloudinaryService: CloudinaryService;
@@ -34,14 +36,16 @@ export class CloudinaryController {
         return res.status(400).json({ message: "No file provided" });
       }
 
-      const filePath = req.file.path; // Path to the temporary file
+      const { path: filePath, mimetype: mimeType } = req.file;
       const { folder, resourceType } = uploadReq;
 
-      const result = await this.cloudinaryService.uploadFile(
-        filePath,
+      const options: UploadApiOptions = {
         folder,
-        resourceType
-      );
+        resource_type: resourceType,
+        format: getFileFormat(mimeType)
+      };
+
+      const result = await this.cloudinaryService.uploadFile(filePath, options);
 
       // Delete the temporary file after successful upload
       await fs.unlink(filePath);
@@ -49,9 +53,11 @@ export class CloudinaryController {
       return res.status(200).json({
         message: "File uploaded successfully",
         data: {
-          url: result.secure_url,
-          publicId: result.public_id,
-          resourceType: result.resource_type as ResourceType
+          public_id: result.public_id,
+          original_filename: result.original_filename,
+          format: result.format || getFileFormat(mimeType),
+          secure_url: result.secure_url,
+          resource_type: result.resource_type as ResourceType
         }
       });
     } catch (error) {
@@ -73,7 +79,7 @@ export class CloudinaryController {
   async deleteFile(req: Request, res: Response): Promise<Response> {
     try {
       const deleteReq: DeleteReq = req.body;
-      const validator = new InputValidator(req.body);
+      const validator = new InputValidator(deleteReq);
 
       // Validate inputs
       validator
@@ -105,6 +111,38 @@ export class CloudinaryController {
     } catch (error) {
       console.error("Error deleting file:", error);
       return res.status(500).json({ message: "File deletion failed.", error });
+    }
+  }
+
+  async getFileUrl(req: Request, res: Response): Promise<Response> {
+    try {
+      const getFileUrlReq: GetFileUrlReq = req.body;
+      const validator = new InputValidator(getFileUrlReq);
+
+      // Validate inputs
+      validator
+        .validateRequired("publicId")
+        .validateRequired("resourceType")
+        .validateEnum("resourceType", ["image", "video", "raw"]);
+
+      if (!validator.isValid()) {
+        return res.status(400).json({ errors: validator.getErrors() });
+      }
+
+      const { publicId, resourceType } = getFileUrlReq;
+
+      const url = await this.cloudinaryService.getFileUrl(
+        publicId,
+        resourceType
+      );
+      return res
+        .status(200)
+        .json({ message: "File URL retrieved successfully", url });
+    } catch (error) {
+      console.error("Error retrieving file URL:", error);
+      return res
+        .status(500)
+        .json({ message: "Failed to retrieve file URL", error });
     }
   }
 }

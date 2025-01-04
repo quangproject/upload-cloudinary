@@ -11,8 +11,11 @@ const cloudinaryController = new CloudinaryController();
 router.post("/upload", upload.single("file"), (req: Request, res: Response) => {
   cloudinaryController.uploadFile(req, res);
 });
-router.delete("/delete", (req: Request, res: Response) => {
+router.post("/delete", (req: Request, res: Response) => {
   cloudinaryController.deleteFile(req, res);
+});
+router.post("/get-file-url", (req: Request, res: Response) => {
+  cloudinaryController.getFileUrl(req, res);
 });
 
 export default router;
