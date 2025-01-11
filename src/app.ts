@@ -1,12 +1,15 @@
 import bodyParser from "body-parser";
 import express, { Express } from "express";
 import morgan from "morgan";
-import routes from "./routes/index";
 import { CloudinaryConfig } from "./config/cloudinary.config";
-import dotenv from "dotenv";
-dotenv.config();
+import { routes } from "./routes";
+import { httpExceptionFilter } from "./utils/exception";
 
 const app: Express = express();
+
+// Initialize Cloudinary
+const cloudinaryConfig = CloudinaryConfig.getInstance();
+cloudinaryConfig.initialize();
 
 app.use(bodyParser.json());
 app.use(express.json());
@@ -16,13 +19,8 @@ app.get("/", (req, res) => {
   res.send("Upload Cloudinary!");
 });
 
-// Initialize Cloudinary
-new CloudinaryConfig({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
 routes(app);
+
+app.use(httpExceptionFilter);
 
 export default app;

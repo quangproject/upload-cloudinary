@@ -2,20 +2,19 @@ import express from "express";
 import { Request, Response } from "express";
 import { CloudinaryController } from "../controllers/cloudinary.controller";
 import multer from "multer";
+import { asyncInterceptor } from "../utils/interceptor";
 
 // Initialize Multer for file uploads
 const upload = multer({ dest: "public/uploads/" }); // Temporary storage before uploading to Cloudinary
 const router = express.Router();
 const cloudinaryController = new CloudinaryController();
 
-router.post("/upload", upload.single("file"), (req: Request, res: Response) => {
-  cloudinaryController.uploadFile(req, res);
-});
-router.post("/delete", (req: Request, res: Response) => {
-  cloudinaryController.deleteFile(req, res);
-});
-router.post("/get-file-url", (req: Request, res: Response) => {
-  cloudinaryController.getFileUrl(req, res);
-});
+router.post(
+  "/upload",
+  upload.single("file"),
+  asyncInterceptor(cloudinaryController.uploadFile)
+);
+router.post("/delete", asyncInterceptor(cloudinaryController.deleteFile));
+router.post("/get-file-url", asyncInterceptor(cloudinaryController.getFileUrl));
 
 export default router;

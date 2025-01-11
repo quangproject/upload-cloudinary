@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { ENV } from "../config/env.config";
 
 export const basicAuth = (req: Request, res: Response, next: NextFunction) => {
   // Get the Authorization header
@@ -18,8 +19,8 @@ export const basicAuth = (req: Request, res: Response, next: NextFunction) => {
   // Split into username and password
   const [username, password] = credentials.split(":");
   if (
-    username !== process.env.BASIC_AUTH_USERNAME ||
-    password !== process.env.BASIC_AUTH_PASSWORD
+    username !== ENV.BASIC_AUTH_USERNAME ||
+    password !== ENV.BASIC_AUTH_PASSWORD
   ) {
     res.status(401).json({ message: "Unauthorized" });
     return;

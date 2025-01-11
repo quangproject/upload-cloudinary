@@ -19,3 +19,8 @@ export interface GetFileUrlReq {
   publicId: string;
   resourceType: ResourceType;
 }
+
+export interface ApiResponse {
+  message: string;
+  data?: any;
+}

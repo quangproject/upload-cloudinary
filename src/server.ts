@@ -1,7 +1,8 @@
 import app from "./app";
+import { ENV } from "./config/env.config";
 import logger from "./utils/logger";
 
-const port = Number(process.env.PORT) || 3000;
+const port = Number(ENV.PORT);
 
 const main = async () => {
   try {

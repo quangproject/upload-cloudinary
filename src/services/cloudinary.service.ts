@@ -1,57 +1,58 @@
-import {
-  v2 as cloudinary,
-  UploadApiOptions,
-  UploadApiResponse
-} from "cloudinary";
+import { UploadApiOptions, UploadApiResponse } from "cloudinary";
 import { CloudinaryConfig } from "../config/cloudinary.config";
-import { ResourceType } from "../type";
+import { DeleteReq, GetFileUrlReq, ResourceType } from "../type";
+import { HttpException } from "../exceptions/http.exception";
+import { HTTP_STATUS_CODE } from "../constant";
 
 export class CloudinaryService {
+  private cloudinaryConfig: CloudinaryConfig;
+
   constructor() {
-    // Ensure Cloudinary is initialized (you can also remove this if already initialized)
-    CloudinaryConfig.getInstance();
+    this.cloudinaryConfig = CloudinaryConfig.getInstance();
   }
 
   async uploadFile(
     filePath: string,
     options: UploadApiOptions
   ): Promise<UploadApiResponse> {
-    try {
-      const result = await cloudinary.uploader.upload(filePath, options);
-      return result;
-    } catch (error) {
-      console.error("Error uploading to Cloudinary:", error);
-      throw error;
-    }
+    const result = await this.cloudinaryConfig
+      .getCloudinary()
+      .uploader.upload(filePath, options);
+    return result;
   }
 
-  async deleteFile(
-    publicId: string,
-    resourceType: ResourceType
-  ): Promise<{ result: string }> {
-    try {
-      const result = await cloudinary.uploader.destroy(publicId, {
+  async deleteFile(deleteReq: DeleteReq): Promise<string> {
+    const { publicId, resourceType } = deleteReq;
+
+    const result = await this.cloudinaryConfig
+      .getCloudinary()
+      .uploader.destroy(publicId, {
         resource_type: resourceType
       });
-      return result;
-    } catch (error) {
-      console.error("Error deleting file from Cloudinary:", error);
-      throw error;
+
+    if (result.result !== "ok") {
+      throw new HttpException(
+        "File not found or already deleted",
+        HTTP_STATUS_CODE.NOT_FOUND
+      );
     }
+
+    return "File deleted successfully";
   }
 
-  async getFileUrl(
-    publicId: string,
-    resourceType: ResourceType
-  ): Promise<string> {
+  async getFileUrl(getFileUrlReq: GetFileUrlReq): Promise<string> {
     try {
-      const result = await cloudinary.api.resource(publicId, {
-        resource_type: resourceType
-      });
-      return result.secure_url;
-    } catch (error) {
-      console.error("Error retrieving file URL:", error);
-      throw error;
+      const { publicId, resourceType } = getFileUrlReq;
+
+      const result = await this.cloudinaryConfig
+        .getCloudinary()
+        .api.resource(publicId, {
+          resource_type: resourceType
+        });
+
+      return result;
+    } catch (error: any) {
+      throw new HttpException(error.error.message, error.error.http_code);
     }
   }
 }
