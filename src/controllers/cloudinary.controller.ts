@@ -51,11 +51,17 @@ export class CloudinaryController {
         );
       }
 
-      const { path: filePath, mimetype: mimeType } = req.file;
+      const {
+        path: filePath,
+        mimetype: mimeType,
+        originalname: originalName
+      } = req.file;
       const { folder, resourceType } = uploadReq;
 
       const options: UploadApiOptions = {
         folder,
+        public_id: `${Date.now()}-${originalName}`,
+        filename_override: originalName,
         resource_type: resourceType,
         format: getFileFormat(mimeType)
       };
