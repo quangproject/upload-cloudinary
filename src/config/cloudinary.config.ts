@@ -1,4 +1,4 @@
-import { v2 as cloudinary, ConfigOptions } from "cloudinary";
+import { v2 as cloudinary, ConfigOptions, UploadApiOptions } from "cloudinary";
 import logger from "../utils/logger";
 import { ENV } from "./env.config";
 
@@ -31,5 +31,24 @@ export class CloudinaryConfig {
       throw new Error("Cloudinary is not configured yet.");
     }
     return cloudinary;
+  }
+
+  async uploadFile(filePath: string, options: UploadApiOptions) {
+    const result = await cloudinary.uploader.upload(filePath, options);
+    return result;
+  }
+
+  async deleteFile(publicId: string, resourceType: string) {
+    const result = await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType
+    });
+    return result;
+  }
+
+  async getFileUrl(publicId: string, resourceType: string) {
+    const result = await cloudinary.api.resource(publicId, {
+      resource_type: resourceType
+    });
+    return result;
   }
 }

@@ -1,5 +1,3 @@
-import { isJson } from "../utils";
-
 export class HttpException extends Error {
   statusCode: number;
 
@@ -10,6 +8,10 @@ export class HttpException extends Error {
   }
 
   getResponse() {
-    return isJson(this.message) ? JSON.parse(this.message) : this.message;
+    try {
+      return JSON.parse(this.message);
+    } catch (error) {
+      return this.message;
+    }
   }
 }

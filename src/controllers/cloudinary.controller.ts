@@ -51,47 +51,22 @@ export class CloudinaryController {
         );
       }
 
-      const {
-        path: filePath,
-        mimetype: mimeType,
-        originalname: originalName
-      } = req.file;
-      const { folder, resourceType } = uploadReq;
-
-      const options: UploadApiOptions = {
-        folder,
-        public_id: `${Date.now()}-${originalName}`,
-        filename_override: originalName,
-        resource_type: resourceType,
-        format: getFileFormat(mimeType)
-      };
-
-      const result = await this.cloudinaryService.uploadFile(filePath, options);
-
-      // Delete the temporary file after successful upload
-      await fs.unlink(filePath);
+      const result = await this.cloudinaryService.uploadFile(
+        req.file,
+        uploadReq
+      );
 
       return {
         message: "File uploaded successfully",
-        data: {
-          public_id: result.public_id,
-          original_filename: result.original_filename,
-          format: result.format || getFileFormat(mimeType),
-          secure_url: result.secure_url,
-          resource_type: result.resource_type as ResourceType
-        }
+        data: result
       };
     } catch (error) {
-      // Delete temp file even if upload fails
-      if (req.file?.path) {
-        await fs
-          .unlink(req.file.path)
-          .catch((unlinkError) =>
-            console.error("Failed to delete temp file:", unlinkError)
-          );
-      }
-
       throw error;
+    } finally {
+      // Delete the temporary file after uploading
+      if (req.file) {
+        await fs.unlink(req.file.path);
+      }
     }
   };
 
