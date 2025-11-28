@@ -1,0 +1,47 @@
+# Node modules & deps
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Builds (để stage build tự tạo lại)
+dist
+build
+.next
+out
+
+# Env files (KHÔNG bao giờ để vào image)
+.env
+.env.*
+!.env.example
+
+# Git & metadata
+.git
+.gitignore
+.gitattributes
+.gitlab*
+.github/
+
+# OS junk files
+.DS_Store
+Thumbs.db
+
+# Editor dirs
+.vscode/
+.idea/
+
+# Docker files not needed inside container
+Dockerfile*
+docker-compose.*
+
+# Logs & temp
+*.log
+logs/
+temp/
+tmp/
+
+# Test files
+coverage/
+*.spec.ts
+*.test.ts
+__tests__/
